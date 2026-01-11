@@ -93,6 +93,20 @@ int main() {
     for(int i=0; i<10; i++){
         printf("%f\n", logits[i]);
     }
+    printf("class label: %d\n", labels[0]);
+    printf("class probabilities after softmax:\n");
+    int pred=0;
+    float best= logits[0];
+    for(int i=1;i<OUTPUT_DIM;i++){
+        printf("class %d: %f\n", i, logits[i]);
+        if(logits[i]>best){
+            best=logits[i];
+            pred=i;
+        }
+    }
+    printf("predicted digit: %d\n", pred);
+    printf("true label: %d\n", labels[0]);
+    
 
     // for (int i = 0; i < N; i++) {
     //     printf("Label: %d\n", labels[i]);
