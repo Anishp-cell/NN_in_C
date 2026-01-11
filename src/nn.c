@@ -9,3 +9,10 @@ void dense_layer_forward(const float *input, float *output, const float *weights
         output[i]=sum;
     }
 }
+void relu(float *data, int size){
+    for(int i=0;i<size;i++){
+        if(data[i]<0){
+            data[i]=0;
+        }
+    }
+}
