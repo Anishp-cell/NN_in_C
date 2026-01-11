@@ -7,7 +7,7 @@
 #define INPUT_DIM 784
 #define HIDDEN_DIM 128
 #define HIDDEN_DIM2 64
-
+#define OUTPUT_DIM 10
 
 float weights1[HIDDEN_DIM * INPUT_DIM]; //weights for first layer
 float bias1[HIDDEN_DIM];
@@ -16,6 +16,10 @@ float activations1[HIDDEN_DIM];
 float weights2[HIDDEN_DIM2 * HIDDEN_DIM]; //weights for second layer
 float bias2[HIDDEN_DIM2];
 float activations2[HIDDEN_DIM2];
+
+float weights3[OUTPUT_DIM * HIDDEN_DIM2]; //weights for output layer
+float bias3[OUTPUT_DIM];
+float logits[OUTPUT_DIM];
 
 int main() {
     float *images = malloc(N * 784 * sizeof(float));
@@ -35,6 +39,13 @@ int main() {
     }
     for(int i=0; i<HIDDEN_DIM2;i++){
         bias2[i]=0.0f;
+    }
+    // initialize weights and bias with random values(output layer)
+    for(int i= 0;i<OUTPUT_DIM*HIDDEN_DIM2;i++){
+        weights3[i]= ((float)rand()/RAND_MAX - 0.1f) * 0.01f;
+    }
+    for(int i=0; i<OUTPUT_DIM;i++){
+        bias3[i]= 0.0f;
     }
 
 
@@ -56,9 +67,19 @@ int main() {
         HIDDEN_DIM,          // input dimension
         HIDDEN_DIM2          // output dimension
     );
+    //forward pass for output layer
+    dense_layer_forward(
+        activations2,       // input vector
+        logits,             // output vector
+        weights3,           // weights
+        bias3,              // bias
+        HIDDEN_DIM2,       // input dimension
+        OUTPUT_DIM         // output dimension
+    );
 
     relu(activations1, HIDDEN_DIM);
     relu(activations2, HIDDEN_DIM2);
+    relu(logits, OUTPUT_DIM);
 
     printf("first layer activation:\n");
     for(int i=0;i<10;i++){
@@ -68,7 +89,11 @@ int main() {
     for(int i=0;i<10;i++){
         printf("%f\n", activations2[i]);
     }
-    
+    printf("output logits: \n");
+    for(int i=0; i<10; i++){
+        printf("%f\n", logits[i]);
+    }
+
     // for (int i = 0; i < N; i++) {
     //     printf("Label: %d\n", labels[i]);
     //     for (int r = 0; r < 28; r++) {
