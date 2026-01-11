@@ -6,16 +6,20 @@
 #define N 5
 #define INPUT_DIM 784
 #define HIDDEN_DIM 128
+#define HIDDEN_DIM2 64
+
 
 float weights1[HIDDEN_DIM * INPUT_DIM]; //weights for first layer
 float bias1[HIDDEN_DIM];
 float activations1[HIDDEN_DIM];
 
+float weights2[HIDDEN_DIM2 * HIDDEN_DIM]; //weights for second layer
+float bias2[HIDDEN_DIM2];
+float activations2[HIDDEN_DIM2];
 
 int main() {
     float *images = malloc(N * 784 * sizeof(float));
     int   *labels = malloc(N * sizeof(int));
-
     load_mnist_images("./Dataset/train-images.idx3-ubyte", images, N);
     load_mnist_labels("./Dataset/train-labels.idx1-ubyte", labels, N);
     //initialize weights and bias with random values(first layer)
@@ -25,6 +29,15 @@ int main() {
     for(int i=0; i<HIDDEN_DIM;i++){
         bias1[i]=0.0f;
     }
+    // initialize weights and bias with random values(second layer)
+    for(int i=0;i<HIDDEN_DIM2*HIDDEN_DIM;i++){ 
+        weights2[i]=((float)rand()/RAND_MAX - 0.05f) * 0.01f;
+    }
+    for(int i=0; i<HIDDEN_DIM2;i++){
+        bias2[i]=0.0f;
+    }
+
+
     //forward pass for first layer
     dense_layer_forward(
         &images[0],          // input vector (first image)
@@ -34,12 +47,28 @@ int main() {
         INPUT_DIM,           // input dimension
         HIDDEN_DIM           // output dimension
     );
+    //forward pass for second layer
+    dense_layer_forward(
+        activations1,       // input vector
+        activations2,        // output vector
+        weights2,            // weights
+        bias2,               // bias
+        HIDDEN_DIM,          // input dimension
+        HIDDEN_DIM2          // output dimension
+    );
 
     relu(activations1, HIDDEN_DIM);
+    relu(activations2, HIDDEN_DIM2);
+
     printf("first layer activation:\n");
     for(int i=0;i<10;i++){
         printf("%f\n", activations1[i]);
     }
+    printf("second layer activation: \n");
+    for(int i=0;i<10;i++){
+        printf("%f\n", activations2[i]);
+    }
+    
     // for (int i = 0; i < N; i++) {
     //     printf("Label: %d\n", labels[i]);
     //     for (int r = 0; r < 28; r++) {
