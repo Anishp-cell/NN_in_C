@@ -54,8 +54,8 @@ int main() {
 
     load_mnist_images("./Dataset/t10k-images.idx3-ubyte", test_images, TEST_SAMPLES);
     load_mnist_labels("./Dataset/t10k-labels.idx1-ubyte", test_labels, TEST_SAMPLES);
-#define EPOCHS 5
-    float lr = 0.05f;
+#define EPOCHS 15
+    float lr = 0.01f;
 
     //initialize weights and bias with random values(first layer)
     for(int i=0; i<HIDDEN_DIM*INPUT_DIM;i++){
@@ -81,7 +81,19 @@ int main() {
 
   for (int epoch = 0; epoch < EPOCHS; epoch++) {
     float epoch_loss = 0.0f;
+    // Shuffle training data
+    for (int i = TRAIN_SAMPLES - 1; i > 0; i--) {
+    int j = rand() % (i + 1);
+    int tmp = train_labels[i];
+    train_labels[i] = train_labels[j];
+    train_labels[j] = tmp;
 
+    for (int k = 0; k < INPUT_DIM; k++) {
+        float t = train_images[i*INPUT_DIM + k];
+        train_images[i*INPUT_DIM + k] = train_images[j*INPUT_DIM + k];
+        train_images[j*INPUT_DIM + k] = t;
+    }   
+}
     for (int n = 0; n < TRAIN_SAMPLES; n++) {
         float *x = &train_images[n * INPUT_DIM];
         int y = train_labels[n];
