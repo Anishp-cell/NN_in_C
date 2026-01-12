@@ -2,12 +2,15 @@
 #include <stdlib.h>
 #include "mnist.h"
 #include "nn.h"
+#include <string.h>
+
 
 #define N 5
 #define INPUT_DIM 784
 #define HIDDEN_DIM 128
 #define HIDDEN_DIM2 64
 #define OUTPUT_DIM 10
+
 
 float weights1[HIDDEN_DIM * INPUT_DIM]; //weights for first layer
 float bias1[HIDDEN_DIM];
@@ -20,6 +23,12 @@ float activations2[HIDDEN_DIM2];
 float weights3[OUTPUT_DIM * HIDDEN_DIM2]; //weights for output layer
 float bias3[OUTPUT_DIM];
 float logits[OUTPUT_DIM];
+
+float d_logits[OUTPUT_DIM]; //gradients for final layer
+float d_weights3[OUTPUT_DIM *HIDDEN_DIM2];
+float d_bias3[OUTPUT_DIM];
+float d_activations2[HIDDEN_DIM2];
+
 
 int main() {
     float *images = malloc(N * 784 * sizeof(float));
@@ -48,6 +57,7 @@ int main() {
         bias3[i]= 0.0f;
     }
 
+    for(int step =0; step<5;step++){
 
     //forward pass for first layer
     dense_layer_forward(
@@ -58,6 +68,7 @@ int main() {
         INPUT_DIM,           // input dimension
         HIDDEN_DIM           // output dimension
     );
+    relu(activations1, HIDDEN_DIM);
     //forward pass for second layer
     dense_layer_forward(
         activations1,       // input vector
@@ -67,6 +78,7 @@ int main() {
         HIDDEN_DIM,          // input dimension
         HIDDEN_DIM2          // output dimension
     );
+    relu(activations2, HIDDEN_DIM2);
     //forward pass for output layer
     dense_layer_forward(
         activations2,       // input vector
@@ -76,10 +88,43 @@ int main() {
         HIDDEN_DIM2,       // input dimension
         OUTPUT_DIM         // output dimension
     );
+    softmax(logits, OUTPUT_DIM);
+    float sum = 0.0f;
+    for (int i = 0; i < OUTPUT_DIM; i++) sum += logits[i];
+    printf("Softmax sum = %f\n", sum);
+ 
+    float loss = cross_entropy_loss(logits, labels[0]);
+    printf("Loss: %f\n", loss);
+    // dL/dz = softmax - one_hot(label)
+    for (int i = 0; i < OUTPUT_DIM; i++) {
+        d_logits[i] = logits[i];
+    }
+    d_logits[labels[0]] -= 1.0f;
 
-    relu(activations1, HIDDEN_DIM);
-    relu(activations2, HIDDEN_DIM2);
-    relu(logits, OUTPUT_DIM);
+    memset(d_weights3,0,sizeof(d_weights3));
+    memset(d_bias3, 0, sizeof(d_bias3));
+    dense_layer_backward(
+        activations2,       // input vector
+        d_logits,           // gradient from output
+        d_activations2,     // output gradient
+        d_weights3,         // weight gradients
+        d_bias3,            // bias gradients
+        weights3,           // weights
+        HIDDEN_DIM2,       // input dimension
+        OUTPUT_DIM         // output dimension
+    );
+    float lr = 0.01f;
+
+    // Update weights
+    for (int i = 0; i < OUTPUT_DIM * HIDDEN_DIM2; i++) {
+        weights3[i] -= lr * d_weights3[i];
+    }
+
+    // Update bias
+    for (int i = 0; i < OUTPUT_DIM; i++) {
+        bias3[i] -= lr * d_bias3[i];
+    }
+}
 
     printf("first layer activation:\n");
     for(int i=0;i<10;i++){
@@ -89,24 +134,25 @@ int main() {
     for(int i=0;i<10;i++){
         printf("%f\n", activations2[i]);
     }
-    printf("output logits: \n");
+    printf("output probabilities:\n");
     for(int i=0; i<10; i++){
         printf("%f\n", logits[i]);
     }
     printf("class label: %d\n", labels[0]);
     printf("class probabilities after softmax:\n");
-    int pred=0;
-    float best= logits[0];
-    for(int i=1;i<OUTPUT_DIM;i++){
+    int pred = 0;
+    float best = logits[0];
+    for (int i = 0; i < OUTPUT_DIM; i++) {
         printf("class %d: %f\n", i, logits[i]);
-        if(logits[i]>best){
-            best=logits[i];
-            pred=i;
+        if (logits[i] > best) {
+            best = logits[i];
+            pred = i;
         }
     }
+
     printf("predicted digit: %d\n", pred);
     printf("true label: %d\n", labels[0]);
-    
+
 
     // for (int i = 0; i < N; i++) {
     //     printf("Label: %d\n", labels[i]);
