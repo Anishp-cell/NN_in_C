@@ -29,6 +29,10 @@ float d_weights3[OUTPUT_DIM *HIDDEN_DIM2];
 float d_bias3[OUTPUT_DIM];
 float d_activations2[HIDDEN_DIM2];
 
+float d_weights2[HIDDEN_DIM2* HIDDEN_DIM]; // gradients for second layer
+float d_bias2[HIDDEN_DIM2];
+float d_activations1[HIDDEN_DIM];
+
 
 int main() {
     float *images = malloc(N * 784 * sizeof(float));
@@ -114,13 +118,34 @@ int main() {
         OUTPUT_DIM         // output dimension
     );
     float lr = 0.01f;
+    relu_backward(d_activations2, activations2, HIDDEN_DIM2);
+    memset(d_weights2, 0, sizeof(d_weights2));
+    memset(d_bias2, 0, sizeof(d_bias2));
+    dense_layer_backward(
+        activations1,       // input vector
+        d_activations2,     // gradient from output
+        d_activations1,     // output gradient
+        d_weights2,         // weight gradients
+        d_bias2,            // bias gradients
+        weights2,           // weights
+        HIDDEN_DIM,         // input dimension
+        HIDDEN_DIM2         // output dimension
+    );
 
-    // Update weights
+    //update weights for layer 2
+    for(int i=0;i<HIDDEN_DIM2*HIDDEN_DIM;i++){
+        weights2[i]-=lr*d_weights2[i];
+    }
+    //update bias for lauer 2
+    for(int i=0;i<HIDDEN_DIM2;i++){
+        bias2[i]-=lr*d_bias2[i];
+    }
+    // Update weights for layer 1
     for (int i = 0; i < OUTPUT_DIM * HIDDEN_DIM2; i++) {
         weights3[i] -= lr * d_weights3[i];
     }
 
-    // Update bias
+    // Update bias for layer 1
     for (int i = 0; i < OUTPUT_DIM; i++) {
         bias3[i] -= lr * d_bias3[i];
     }
