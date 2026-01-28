@@ -277,6 +277,38 @@ int main() {
 
     float accuracy = 100.0f * correct / TEST_SAMPLES;
     printf("FP32 Test Accuracy: %.2f%%\n", accuracy);
+    FILE *f = fopen("weights_dump.txt", "w");
+
+for (int i = 0; i < HIDDEN_DIM * INPUT_DIM; i++)
+    fprintf(f, "%ff,", weights1[i]);
+
+fprintf(f, "\n\n");
+
+for (int i = 0; i < HIDDEN_DIM; i++)
+    fprintf(f, "%ff,", bias1[i]);
+
+fprintf(f, "\n\n");
+
+for (int i = 0; i < HIDDEN_DIM2 * HIDDEN_DIM; i++)
+    fprintf(f, "%ff,", weights2[i]);
+
+fprintf(f, "\n\n");
+
+for (int i = 0; i < HIDDEN_DIM2; i++)
+    fprintf(f, "%ff,", bias2[i]);
+
+fprintf(f, "\n\n");
+
+for (int i = 0; i < OUTPUT_DIM * HIDDEN_DIM2; i++)
+    fprintf(f, "%ff,", weights3[i]);
+
+fprintf(f, "\n\n");
+
+for (int i = 0; i < OUTPUT_DIM; i++)
+    fprintf(f, "%ff,", bias3[i]);
+
+fclose(f);
+
     free(train_images);
     free(train_labels);
     free(test_images);
